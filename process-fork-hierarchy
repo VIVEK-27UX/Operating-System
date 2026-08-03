@@ -1,0 +1,57 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+    int n;
+    
+    printf("Enter n: ");
+    scanf("%d", &n);
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("Fork failed");
+        return 1;
+    } 
+    else if (pid == 0) {
+        pid_t gc = fork();
+
+        if (gc < 0) {
+            perror("Fork Error");
+            return 1;
+        }
+        else if (gc == 0) {
+            // Grandchild
+            int sum = 0;
+            for (int i = 1; i <= n; i++) { 
+                sum += i;
+            }
+            printf("[Grandchild] Sum of 1 to %d = %d\n", n, sum);
+        }
+        else {
+            // Child
+           wait(NULL); // Wait for grandchild to finish
+            long long a = 0, b = 1, next;
+            printf("[Child] Fibonacci series up to %d terms: ", n);
+            for (int i = 1; i <= n; i++) {
+                printf("%lld ", a);
+                next = a + b;
+                a = b;
+                b = next;
+            }
+            printf("\n");
+        }
+    } 
+    else {
+        // Parent
+        wait(NULL); // Wait for child to finish
+        long long fact = 1;
+        for (int i = 1; i <= n; i++) {
+            fact *= i;
+        }
+        printf("[Parent] Factorial of %d = %lld\n", n, fact);
+    }
+
+    return 0;
+}
